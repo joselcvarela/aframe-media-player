@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/aframe/0.5.0/aframe.min.js"></script>
+</head>
+
+<body>
+  <script>
+    function getSource($player) {
+      return $player.getAttribute('material').src || '';
+    }
+
+    function getPlayerState($player) {
+      var $src = document.querySelector(getSource($player));
+      if ($src.tagName === 'VIDEO') {
+        if ($src.paused && $src.ended) return 'ENDED';
+        if ($src.paused && !$src.ended) return 'PAUSED';
+        if (!$src.paused && !$src.ended) return 'PLAYING';
+      }
+      return null;
+    }
+
+    AFRAME.registerComponent('media-player', {
+      schema: {
+        mediaToPlay: { type: 'string', default: '' },
+        mediaPlayer: { type: 'string', default: '' },
+        action: { type: 'string', default: 'PLAY' }, // PLAY, STOP, PAUSE
+      },
+      init: function () {
+        var data = this.data;
+        var el = this.el;
+        var $mediaPlayer = document.querySelector(data.mediaPlayer);
+        var initialMaterial = $mediaPlayer.getAttribute('material');
+        var $mediaToPlay = null;
+        if (data.mediaToPlay) $mediaToPlay = document.querySelector(data.mediaToPlay);
+
+        el.addEventListener('click', function () {
+          switch (data.action) {
+            case 'PLAY': {
+              $mediaPlayer.setAttribute('material', 'src', data.mediaToPlay);
+              $mediaToPlay.play();
+              break;
+            }
+            case 'PAUSE': {
+              var $src = getSource($mediaPlayer);
+              $src.pause();
+              break;
+            }
+            case 'STOP': {
+              var $src = getSource($mediaPlayer);
+              $src.pause();
+              $src.currentTime = 0;
+              $mediaPlayer.setAttribute('material', initialMaterial);
+              break;
+            }
+          }
+        })
+      }
+    });
+  </script>
+  <a-scene>
+    <a-assets>
+      <img src="/assets/img.jpg" alt="" id="imgA" />
+      <img src="/assets/img2.jpg" alt="" id="imgB" />
+      <video id="vidA" src="/assets/360.mp4"></video>
+      <video id="vidB" src="/assets/360_2.mp4"></video>
+    </a-assets>
+
+    <a-sky id="sky" material="src: #imgA"></a-sky>
+
+    <a-plane position="0 -3 0" rotation="-90 0 0" material="color: blue" media-player="mediaPlayer: #sky; action: STOP">
+      <a-text align="center" position="0 0 0.1" value="Sair"></a-text>
+    </a-plane>
+
+    <a-plane
+      position="0 1 -3"
+      media-player="mediaPlayer: #sky; mediaToPlay: #vidA"
+      material="color: green"
+    ></a-plane>
+
+    <a-plane
+      position="2 1 -3"
+      media-player="mediaPlayer: #sky; mediaToPlay: #vidB"
+      material="color: blue"
+    ></a-plane>
+
+    <a-camera id="camera" position="0 0 0">
+      <a-cursor color="#4CC3D9" fuse="true"></a-cursor>
+    </a-camera </a-scene>
+</body>
+
+</html>
